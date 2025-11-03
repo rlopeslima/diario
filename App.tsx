@@ -6,7 +6,7 @@ import TimelineView from './views/TimelineView';
 import CalendarView from './views/CalendarView';
 import OnboardingGuide from './components/OnboardingGuide';
 import { RefreshIcon } from './components/icons';
-import { supabase } from './integrations/supabase/client';
+import { supabase } from './src/integrations/supabase/client';
 import { getEntriesFromDatabase, saveEntryToDatabase, updateEntryInDatabase, deleteEntryFromDatabase } from './services/supabaseService';
 
 const App: React.FC = () => {

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Entry, EntryType } from '../types';
 import EntryCard from '../components/EntryCard';
@@ -34,37 +33,90 @@ const TimelineView: React.FC<TimelineViewProps> = ({ entries, updateEntry }) => 
             return;
         }
 
-        const headers = ['id', 'date', 'type', 'description', 'amount', 'vendor', 'category', 'reminder'];
-        
-        const escapeCsvField = (field: any): string => {
-            if (field === null || field === undefined) return '';
-            const stringField = String(field);
-            if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
-                return `"${stringField.replace(/"/g, '""')}"`;
-            }
-            return stringField;
-        };
+        const headers = ['ID', 'Data', 'Tipo', 'Descrição', 'Valor', 'Fornecedor', 'Categoria', 'Lembrete'];
 
-        const csvRows = [
-            headers.join(','),
-            ...filteredEntries.map(entry => [
-                entry.id,
-                entry.date.toISOString(),
-                entry.type,
-                entry.description,
-                entry.amount ?? '',
-                entry.vendor ?? '',
-                entry.category ?? '',
-                entry.reminder ?? ''
-            ].map(escapeCsvField).join(','))
-        ];
+        const rows = filteredEntries.map(entry => `
+            <tr>
+                <td contenteditable="false" style="color: #9ca3af;">${entry.id}</td>
+                <td contenteditable="true">${entry.date.toISOString().split('T')[0]}</td>
+                <td contenteditable="true">${entry.type}</td>
+                <td contenteditable="true">${entry.description}</td>
+                <td contenteditable="true">${entry.amount ?? ''}</td>
+                <td contenteditable="true">${entry.vendor ?? ''}</td>
+                <td contenteditable="true">${entry.category ?? ''}</td>
+                <td contenteditable="true">${entry.reminder ? new Date(entry.reminder).toISOString().substring(0, 16).replace('T', ' ') : ''}</td>
+            </tr>
+        `).join('');
 
-        const csvString = csvRows.join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const htmlString = `
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Exportação Diário IA</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #111827; color: #f3f4f6; padding: 20px; }
+                    h1 { color: #60a5fa; }
+                    p { color: #d1d5db; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+                    th, td { border: 1px solid #374151; padding: 12px; text-align: left; }
+                    th { background-color: #1f2937; font-weight: 600; }
+                    td { background-color: #374151; }
+                    td[contenteditable="true"]:focus { background-color: #4b5563; outline: 2px solid #60a5fa; }
+                    button {
+                        background-color: #3b82f6;
+                        color: white;
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        font-weight: 500;
+                        margin-top: 20px;
+                        transition: background-color 0.2s;
+                    }
+                    button:hover { background-color: #2563eb; }
+                </style>
+            </head>
+            <body>
+                <h1>Exportação de Entradas - Diário IA</h1>
+                <p>Clique nas células para editar o conteúdo. O campo 'ID' não é editável. Use o botão abaixo para salvar suas alterações.</p>
+                <button onclick="saveChanges()">Salvar Alterações como Novo Arquivo</button>
+                <table>
+                    <thead>
+                        <tr>
+                            ${headers.map(h => `<th>${h}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+                <script>
+                    function saveChanges() {
+                        if (document.activeElement) document.activeElement.blur();
+                        const htmlContent = document.documentElement.outerHTML;
+                        const blob = new Blob([htmlContent], { type: 'text/html' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = 'diario_ia_export_editado.html';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(a.href);
+                        alert('Seu arquivo editado foi salvo!');
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob([htmlString], { type: 'text/html;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', 'diario_ia_export.csv');
+        link.setAttribute('download', 'diario_ia_export.html');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

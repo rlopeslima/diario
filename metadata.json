@@ -1,0 +1,7 @@
+{
+  "name": "Diário IA",
+  "description": "Um aplicativo inteligente de anotações diárias que converte notas de áudio e recibos em uma linha do tempo estruturada e eventos de calendário usando um agente de IA.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

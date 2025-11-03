@@ -1,4 +1,4 @@
-import { supabase } from '../integrations/supabase/client';
+import { supabase } from '../src/integrations/supabase/client';
 import { Entry } from '../types';
 
 export const saveEntryToDatabase = async (entry: Omit<Entry, 'id'> & { user_id: string }): Promise<Entry> => {
@@ -86,6 +86,6 @@ export const deleteEntryFromDatabase = async (entryId: string, userId: string): 
 
   if (error) {
     console.error('Error deleting entry from database:', error);
-    throw new Error('Falha ao deletar entrada do banco de dados');
+    throw new Error('Falha ao deletar entrada no banco de dados');
   }
 };

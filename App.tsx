@@ -6,52 +6,73 @@ import TimelineView from './views/TimelineView';
 import CalendarView from './views/CalendarView';
 import OnboardingGuide from './components/OnboardingGuide';
 import { RefreshIcon } from './components/icons';
+import { supabase } from './integrations/supabase/client';
+import { getEntriesFromDatabase, saveEntryToDatabase, updateEntryInDatabase, deleteEntryFromDatabase } from './services/supabaseService';
 
 const App: React.FC = () => {
     const [view, setView] = useState<View>('home');
-    const [entries, setEntries] = useState<Entry[]>(() => {
-        try {
-            const storedData = localStorage.getItem('daily-log-entries');
-            if (storedData) {
-                // Re-hydrate Date objects after parsing from JSON
-                return JSON.parse(storedData).map((e: Entry) => ({
-                    ...e,
-                    date: new Date(e.date),
-                }));
-            }
-        } catch (error) {
-            console.error("Failed to load entries from localStorage", error);
-        }
-        return [];
-    });
+    const [entries, setEntries] = useState<Entry[]>([]);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [user, setUser] = useState<any>(null);
 
-    // Effect for checking if onboarding has been completed
+    // Efeito para verificar autenticação e carregar dados
     useEffect(() => {
-        const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding');
-        if (!hasCompletedOnboarding) {
-            setShowOnboarding(true);
-        }
+        const checkAuth = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setUser(user);
+                await loadEntries(user.id);
+            }
+        };
+
+        checkAuth();
+
+        // Configurar listener de autenticação
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session?.user) {
+                setUser(session.user);
+                await loadEntries(session.user.id);
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+                setEntries([]);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
-
-    // Effect for saving entries to localStorage
-    useEffect(() => {
+    const loadEntries = async (userId: string) => {
         try {
-            localStorage.setItem('daily-log-entries', JSON.stringify(entries));
+            const entriesData = await getEntriesFromDatabase(userId);
+            setEntries(entriesData);
         } catch (error) {
-            console.error("Failed to save entries to localStorage", error);
+            console.error("Failed to load entries from database", error);
         }
-    }, [entries]);
+    };
 
-    // Effect for handling notifications
+    // Efeito para salvar entradas no banco de dados quando mudam
     useEffect(() => {
-        // 1. Request permission on mount
+        if (user && entries.length > 0) {
+            // Salvar todas as entradas no banco de dados
+            entries.forEach(async (entry) => {
+                try {
+                    await saveEntryToDatabase({
+                        ...entry,
+                        user_id: user.id,
+                    });
+                } catch (error) {
+                    console.error("Failed to save entry to database", error);
+                }
+            });
+        }
+    }, [entries, user]);
+
+    // Efeito para verificar lembretes
+    useEffect(() => {
         if ('Notification' in window && Notification.permission !== 'granted') {
             Notification.requestPermission();
         }
 
-        // 2. Set up an interval to check for reminders
         const intervalId = setInterval(() => {
             if (Notification.permission === 'granted') {
                 const now = new Date();
@@ -61,35 +82,60 @@ const App: React.FC = () => {
                             body: entry.description,
                             icon: '/vite.svg',
                         });
-                        // Clear the reminder after notifying
+                        // Limpar o lembrete após notificar
                         updateEntry({ ...entry, reminder: undefined });
                     }
                 });
             }
-        }, 60 * 1000); // Check every minute
+        }, 60 * 1000);
 
-        return () => clearInterval(intervalId); // Cleanup on unmount
+        return () => clearInterval(intervalId);
     }, [entries]);
 
+    const addEntry = useCallback(async (newEntryData: Omit<Entry, 'id' | 'date'> & { date: string }) => {
+        if (!user) return;
 
-    const addEntry = useCallback((newEntryData: Omit<Entry, 'id' | 'date'> & { date: string }) => {
+        const newEntry: Entry = {
+            ...newEntryData,
+            id: new Date().toISOString() + Math.random(),
+            date: newEntryData.date ? new Date(newEntryData.date) : new Date(),
+        };
+
         setEntries(prevEntries => {
-            const newEntry: Entry = {
-                ...newEntryData,
-                id: new Date().toISOString() + Math.random(),
-                date: newEntryData.date ? new Date(newEntryData.date) : new Date(),
-            };
-            // Sort by date descending
-            return [...prevEntries, newEntry].sort((a, b) => b.date.getTime() - a.date.getTime());
+            const updatedEntries = [...prevEntries, newEntry].sort((a, b) => b.date.getTime() - a.date.getTime());
+            return updatedEntries;
         });
-        setView('timeline');
-    }, []);
 
-    const updateEntry = useCallback((updatedEntry: Entry) => {
-        setEntries(prevEntries => 
-            prevEntries.map(entry => entry.id === updatedEntry.id ? updatedEntry : entry)
-        );
-    }, []);
+        setView('timeline');
+    }, [user]);
+
+    const updateEntry = useCallback(async (updatedEntry: Entry) => {
+        if (!user) return;
+
+        try {
+            await updateEntryInDatabase({
+                ...updatedEntry,
+                user_id: user.id,
+            });
+
+            setEntries(prevEntries => 
+                prevEntries.map(entry => entry.id === updatedEntry.id ? updatedEntry : entry)
+            );
+        } catch (error) {
+            console.error("Failed to update entry", error);
+        }
+    }, [user]);
+
+    const deleteEntry = useCallback(async (entryId: string) => {
+        if (!user) return;
+
+        try {
+            await deleteEntryFromDatabase(entryId, user.id);
+            setEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
+        } catch (error) {
+            console.error("Failed to delete entry", error);
+        }
+    }, [user]);
 
     const handleOnboardingComplete = () => {
         localStorage.setItem('hasCompletedOnboarding', 'true');
@@ -101,9 +147,9 @@ const App: React.FC = () => {
             case 'home':
                 return <HomeView addEntry={addEntry} />;
             case 'timeline':
-                return <TimelineView entries={entries} updateEntry={updateEntry} />;
+                return <TimelineView entries={entries} updateEntry={updateEntry} deleteEntry={deleteEntry} />;
             case 'calendar':
-                return <CalendarView entries={entries} updateEntry={updateEntry} />;
+                return <CalendarView entries={entries} updateEntry={updateEntry} deleteEntry={deleteEntry} />;
             default:
                 return <HomeView addEntry={addEntry} />;
         }

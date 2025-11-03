@@ -6,9 +6,10 @@ import EntryCard from '../components/EntryCard';
 interface CalendarViewProps {
     entries: Entry[];
     updateEntry: (entry: Entry) => void;
+    deleteEntry: (entryId: string) => void;
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ entries, updateEntry }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ entries, updateEntry, deleteEntry }) => {
     const [selectedDate, setSelectedDate] = useState(new Date());
 
     const filteredEntries = useMemo(() => {
@@ -30,7 +31,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ entries, updateEntry }) => 
                     Entradas para {selectedDate.toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
                 </h2>
                 {filteredEntries.length > 0 ? (
-                    filteredEntries.map(entry => <EntryCard key={entry.id} entry={entry} onUpdate={updateEntry} />)
+                    filteredEntries.map(entry => <EntryCard key={entry.id} entry={entry} onUpdate={updateEntry} onDelete={deleteEntry} />)
                 ) : (
                     <div className="text-center text-gray-400 mt-8">
                         <p>Nenhuma entrada para este dia.</p>

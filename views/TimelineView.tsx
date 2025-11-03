@@ -6,9 +6,10 @@ import { SearchIcon, FilterIcon, ExportIcon } from '../components/icons';
 interface TimelineViewProps {
     entries: Entry[];
     updateEntry: (entry: Entry) => void;
+    deleteEntry: (entryId: string) => void;
 }
 
-const TimelineView: React.FC<TimelineViewProps> = ({ entries, updateEntry }) => {
+const TimelineView: React.FC<TimelineViewProps> = ({ entries, updateEntry, deleteEntry }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState<EntryType | 'all'>('all');
     const [showFilters, setShowFilters] = useState(false);
@@ -175,7 +176,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({ entries, updateEntry }) => 
 
             {filteredEntries.length > 0 ? (
                 <div>
-                    {filteredEntries.map(entry => <EntryCard key={entry.id} entry={entry} onUpdate={updateEntry} />)}
+                    {filteredEntries.map(entry => <EntryCard key={entry.id} entry={entry} onUpdate={updateEntry} onDelete={deleteEntry} />)}
                 </div>
             ) : (
                 <div className="text-center text-gray-400 mt-16 px-4">

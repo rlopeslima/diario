@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Entry, EntryType } from '../types';
-import { NoteIcon, ReceiptIcon, EventIcon, PromoteIcon, BellIcon } from './icons';
+import { NoteIcon, ReceiptIcon, EventIcon, PromoteIcon, BellIcon, TrashIcon } from './icons';
 
 interface EntryCardProps {
     entry: Entry;
     onUpdate: (entry: Entry) => void;
+    onDelete: (entryId: string) => void;
 }
 
-const EntryCard: React.FC<EntryCardProps> = ({ entry, onUpdate }) => {
+const EntryCard: React.FC<EntryCardProps> = ({ entry, onUpdate, onDelete }) => {
     const { type, description, date, amount, vendor, category, reminder } = entry;
     const [isEditingReminder, setIsEditingReminder] = useState(false);
     const [reminderDate, setReminderDate] = useState(reminder || '');
@@ -40,6 +41,12 @@ const EntryCard: React.FC<EntryCardProps> = ({ entry, onUpdate }) => {
         setIsEditingReminder(false);
     };
 
+    const handleDelete = () => {
+        if (window.confirm('Tem certeza que deseja excluir esta entrada?')) {
+            onDelete(entry.id);
+        }
+    };
+
     return (
         <div className="bg-gray-800 rounded-lg shadow-lg p-4 mb-4 mx-4 border border-gray-700">
             <div className="flex items-start">
@@ -67,6 +74,9 @@ const EntryCard: React.FC<EntryCardProps> = ({ entry, onUpdate }) => {
                                     <span className="ml-1">Para Evento</span>
                                 </button>
                             )}
+                            <button onClick={handleDelete} className="p-1 text-gray-400 hover:text-red-400 transition-colors">
+                                <TrashIcon />
+                            </button>
                         </div>
                     </div>
 

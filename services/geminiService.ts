@@ -46,9 +46,15 @@ const processResponse = (response: GenerateContentResponse) => {
     try {
         const text = response.text.trim();
         const json = JSON.parse(text);
+        
+        // Garante que a data seja a de hoje se não for especificada
+        const today = new Date().toISOString().split('T')[0];
+        const finalDate = json.date || today;
+        
         return {
             ...json,
             type: json.type.toLowerCase(),
+            date: finalDate
         };
     } catch (error) {
         console.error("Error parsing Gemini response:", error);

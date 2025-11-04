@@ -124,16 +124,11 @@ export const startLiveSession = (callbacks: {
 }): Promise<LiveSession> => {
     return ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-        callbacks: {
-            onopen: () => console.log('Sessão ao vivo aberta.'),
-            onmessage: callbacks.onMessage,
-            onerror: callbacks.onError,
-            onclose: callbacks.onClose,
-        },
+        callbacks,
         config: {
-            // A modalidade de resposta não é necessária quando usamos apenas a transcrição.
-            // responseModalities: [Modality.AUDIO],
             inputAudioTranscription: {},
+            responseMimeType: "application/json",
+            responseSchema: entrySchema,
         }
     });
 };

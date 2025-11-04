@@ -19,8 +19,9 @@ export const CalendarIcon = () => (
 );
 
 export const MicIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m12 5.25v-1.5m-6 7.5v-1.5m-6-6h12M6 12a6 6 0 016-6v0a6 6 0 016 6v0m-6 7.5a6 6 0 006-6" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8">
+        <path d="M12 15a3 3 0 003-3V6a3 3 0 00-6 0v6a3 3 0 003 3z" />
+        <path d="M17 12a5 5 0 01-10 0H5a7 7 0 0014 0h-2z" />
     </svg>
 );
 

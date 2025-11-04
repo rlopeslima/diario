@@ -1,4 +1,4 @@
-import { supabase } from '../src/integrations/supabase/client';
+import { supabase } from '../integrations/supabase/client';
 import { Entry } from '../types';
 
 export const saveEntryToDatabase = async (entry: Omit<Entry, 'id'> & { user_id: string }): Promise<Entry> => {

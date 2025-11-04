@@ -17,6 +17,5 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["vite/client", "vite-plugin-pwa/client"]
   },
-  "include": ["src", "index.tsx", "vite.config.ts", "components", "views", "services", "utils", "types.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "index.tsx", "vite.config.ts", "components", "views", "services", "utils", "types.ts"]
 }

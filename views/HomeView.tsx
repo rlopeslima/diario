@@ -181,7 +181,7 @@ const HomeView: React.FC<HomeViewProps> = ({ addEntry }) => {
 
             {error && <p className="text-red-400 mt-4">{error}</p>}
             
-            <div className="flex items-start justify-center space-x-8 mt-8 w-full max-w-md">
+            <div className="flex items-center justify-center space-x-4 mt-8 w-full max-w-md">
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -190,43 +190,37 @@ const HomeView: React.FC<HomeViewProps> = ({ addEntry }) => {
                     className="hidden"
                     disabled={isProcessing || isRecording}
                 />
-                <div className="flex flex-col items-center w-20">
-                    <button
-                        id="onboarding-receipt-button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isProcessing || isRecording}
-                        className="p-4 rounded-full bg-gray-600 hover:bg-gray-500 transition-colors disabled:opacity-50"
-                        aria-label="Anexar recibo"
-                    >
-                        <PaperclipIcon />
-                    </button>
-                    <span className="text-xs text-gray-400 mt-2">Recibo</span>
-                </div>
+                <button
+                    id="onboarding-receipt-button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isProcessing || isRecording}
+                    className="p-4 rounded-full bg-gray-700 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500"
+                    aria-label="Anexar recibo"
+                    title="Anexar Recibo"
+                >
+                    <PaperclipIcon />
+                </button>
 
-                <div className="flex flex-col items-center w-20">
-                    <button
-                        id="onboarding-mic-button"
-                        onClick={startRecording}
-                        disabled={isProcessing}
-                        className={`p-8 rounded-full transition-all duration-300 ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500 hover:bg-blue-400'}`}
-                        aria-label={isRecording ? 'Parar gravação' : 'Iniciar gravação'}
-                    >
-                        <MicIcon />
-                    </button>
-                    <span className="text-xs text-gray-400 mt-2">{isRecording ? 'Gravando...' : 'Voz'}</span>
-                </div>
+                <button
+                    id="onboarding-mic-button"
+                    onClick={startRecording}
+                    disabled={isProcessing}
+                    className={`p-8 rounded-full transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500 hover:bg-blue-400'}`}
+                    aria-label={isRecording ? 'Parar gravação' : 'Iniciar gravação de voz'}
+                    title={isRecording ? 'Parar Gravação' : 'Gravar Voz'}
+                >
+                    <MicIcon />
+                </button>
 
-                <div className="flex flex-col items-center w-20">
-                    <button
-                        onClick={() => handleProcessText(transcript)}
-                        disabled={isProcessing || isRecording || !transcript.trim()}
-                        className="p-4 rounded-full bg-gray-600 hover:bg-gray-500 transition-colors disabled:opacity-50"
-                        aria-label="Enviar texto"
-                    >
-                        <SendIcon />
-                    </button>
-                    <span className="text-xs text-gray-400 mt-2">Texto</span>
-                </div>
+                <button
+                    onClick={() => handleProcessText(transcript)}
+                    disabled={isProcessing || isRecording || !transcript.trim()}
+                    className="p-4 rounded-full bg-gray-700 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500"
+                    aria-label="Enviar texto"
+                    title="Enviar Texto"
+                >
+                    <SendIcon />
+                </button>
             </div>
 
         </div>

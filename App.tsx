@@ -14,14 +14,20 @@ const App: React.FC = () => {
     const [entries, setEntries] = useState<Entry[]>([]);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [error, setError] = useState<string | null>(null);
 
     // Efeito para verificar autenticação e carregar dados
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setUser(user);
-                await loadEntries(user.id);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    setUser(user);
+                    await loadEntries(user.id);
+                }
+            } catch (err) {
+                console.error("Erro ao verificar autenticação:", err);
+                setError("Erro ao carregar dados de autenticação");
             }
         };
 
@@ -47,6 +53,7 @@ const App: React.FC = () => {
             setEntries(entriesData);
         } catch (error) {
             console.error("Failed to load entries from database", error);
+            setError("Falha ao carregar entradas do banco de dados");
         }
     };
 
@@ -143,6 +150,17 @@ const App: React.FC = () => {
     };
 
     const renderView = () => {
+        if (error) {
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <div className="text-center text-red-400">
+                        <p className="text-lg">Erro: {error}</p>
+                        <p className="text-sm mt-2">Por favor, atualize a página e tente novamente.</p>
+                    </div>
+                </div>
+            );
+        }
+
         switch (view) {
             case 'home':
                 return <HomeView addEntry={addEntry} />;

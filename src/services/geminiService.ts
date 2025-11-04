@@ -1,12 +1,10 @@
-// Fix: Import Modality and correct EntryType import source.
 import { GoogleGenAI, Type, GenerateContentResponse, LiveSession, LiveServerMessage, Modality } from '@google/genai';
 import { fileToBase64 } from '../utils/helpers';
 import { EntryType } from '../types';
 
-// Assume API_KEY is set in the environment
 const API_KEY = process.env.API_KEY;
 if (!API_KEY) {
-    console.warn("API_KEY not found in environment variables. Please set it up.");
+    console.warn("API_KEY not found. AI features will not work.");
 }
 const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
@@ -47,7 +45,6 @@ const processResponse = (response: GenerateContentResponse) => {
         const text = response.text.trim();
         const json = JSON.parse(text);
         
-        // Garante que a data seja a de hoje se não for especificada
         const today = new Date().toISOString().split('T')[0];
         const finalDate = json.date || today;
         
@@ -57,8 +54,8 @@ const processResponse = (response: GenerateContentResponse) => {
             date: finalDate
         };
     } catch (error) {
-        console.error("Error parsing Gemini response:", error);
-        throw new Error("Falha ao processar a resposta da IA. Pode estar em um formato inválido.");
+        console.error("Error parsing Gemini response:", error, response.text);
+        throw new Error("Falha ao processar a resposta da IA.");
     }
 };
 
@@ -81,12 +78,7 @@ export const processReceipt = async (imageFile: File, userNote: string) => {
     const base64Image = await fileToBase64(imageFile);
     const prompt = `Analise esta imagem de recibo e converta-a em uma entrada de despesa estruturada. Considere também a nota do usuário: "${userNote}". A data de hoje é ${new Date().toLocaleDateString('pt-BR')}.`;
     
-    const imagePart = {
-        inlineData: {
-            mimeType: imageFile.type,
-            data: base64Image,
-        },
-    };
+    const imagePart = { inlineData: { mimeType: imageFile.type, data: base64Image } };
     const textPart = { text: prompt };
 
     const response = await ai.models.generateContent({
@@ -99,7 +91,6 @@ export const processReceipt = async (imageFile: File, userNote: string) => {
     });
     
     const processed = processResponse(response);
-    // Ensure it's classified as an expense
     return { ...processed, type: EntryType.EXPENSE };
 };
 
@@ -110,14 +101,8 @@ export const startLiveSession = (callbacks: {
 }): Promise<LiveSession> => {
     return ai.live.connect({
         model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-        callbacks: {
-            onopen: () => console.log('Sessão ao vivo aberta.'),
-            onmessage: callbacks.onMessage,
-            onerror: callbacks.onError,
-            onclose: callbacks.onClose,
-        },
+        callbacks,
         config: {
-            // Fix: Add responseModalities as required by the Live API guidelines.
             responseModalities: [Modality.AUDIO],
             inputAudioTranscription: {},
         }

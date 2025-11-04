@@ -55,11 +55,11 @@ const InputBar: React.FC<InputBarProps> = ({ addEntry }) => {
     const stopRecording = useCallback(async () => {
         if (!isRecording) return;
         setIsRecording(false);
+        setStatus('Gravação concluída. Revise e envie.');
         const session = await sessionPromiseRef.current;
         session?.close();
         cleanupAudio();
-        handleProcessText(transcript);
-    }, [isRecording, transcript, cleanupAudio, handleProcessText]);
+    }, [isRecording, cleanupAudio]);
 
     const startRecording = async () => {
         if (isRecording) {
@@ -143,7 +143,7 @@ const InputBar: React.FC<InputBarProps> = ({ addEntry }) => {
                     placeholder={isRecording ? "Ouvindo..." : "Digite sua nota..."}
                     className="bg-gray-800 rounded-lg p-2 w-full max-w-md shadow-inner border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-200 resize-none transition-shadow text-sm max-h-24"
                     rows={1}
-                    disabled={isProcessing}
+                    disabled={isProcessing || isRecording}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();

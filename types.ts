@@ -1,3 +1,4 @@
+
 export type View = 'home' | 'timeline' | 'calendar';
 
 export enum EntryType {
@@ -8,7 +9,6 @@ export enum EntryType {
 
 export interface Entry {
     id: string;
-    user_id: string;
     date: Date;
     type: EntryType;
     description: string;

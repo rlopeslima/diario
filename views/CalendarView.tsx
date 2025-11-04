@@ -12,7 +12,7 @@ interface CalendarViewProps {
 const CalendarView: React.FC<CalendarViewProps> = ({ entries, updateEntry, deleteEntry }) => {
     const [selectedDate, setSelectedDate] = useState(new Date());
 
-    const entriesForSelectedDate = useMemo(() => {
+    const filteredEntries = useMemo(() => {
         return entries.filter(entry => 
             new Date(entry.date).toDateString() === selectedDate.toDateString()
         );
@@ -28,12 +28,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({ entries, updateEntry, delet
             />
             <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4 border-b-2 border-gray-700 pb-2">
-                    Entradas para {selectedDate.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+                    Entradas para {selectedDate.toLocaleDateString('pt-BR', { month: 'long', day: 'numeric' })}
                 </h2>
-                {entriesForSelectedDate.length > 0 ? (
-                    entriesForSelectedDate.map(entry => <EntryCard key={entry.id} entry={entry} onUpdate={updateEntry} onDelete={deleteEntry} />)
+                {filteredEntries.length > 0 ? (
+                    filteredEntries.map(entry => <EntryCard key={entry.id} entry={entry} onUpdate={updateEntry} onDelete={deleteEntry} />)
                 ) : (
-                    <p className="text-center text-gray-400 mt-8">Nenhuma entrada para este dia.</p>
+                    <div className="text-center text-gray-400 mt-8">
+                        <p>Nenhuma entrada para este dia.</p>
+                    </div>
                 )}
             </div>
         </div>

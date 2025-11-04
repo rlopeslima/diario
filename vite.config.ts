@@ -14,7 +14,6 @@ export default defineConfig(({ mode }) => {
         react(),
         VitePWA({
           registerType: 'autoUpdate',
-          includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'logo.svg'],
           manifest: {
             name: 'Diário IA',
             short_name: 'Diário IA',

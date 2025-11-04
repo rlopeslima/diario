@@ -1,5 +1,4 @@
-
-export type View = 'home' | 'timeline' | 'calendar';
+export type View = 'chat' | 'calendar';
 
 export enum EntryType {
     NOTE = 'note',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from '../types';
-import { HomeIcon, TimelineIcon, CalendarIcon } from './icons';
+import { ChatIcon, CalendarIcon } from './icons';
 
 interface BottomNavProps {
     currentView: View;
@@ -8,15 +8,13 @@ interface BottomNavProps {
 }
 
 const BottomNav: React.FC<BottomNavProps> = ({ currentView, setView }) => {
-    // Fix: Use React.ReactElement instead of JSX.Element to avoid namespace errors.
     const navItems: { view: View; label: string; icon: React.ReactElement }[] = [
-        { view: 'home', label: 'Agente', icon: <HomeIcon /> },
-        { view: 'timeline', label: 'Linha do Tempo', icon: <TimelineIcon /> },
+        { view: 'chat', label: 'Diário', icon: <ChatIcon /> },
         { view: 'calendar', label: 'Calendário', icon: <CalendarIcon /> },
     ];
 
     return (
-        <footer id="onboarding-nav-bar" className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 shadow-lg">
+        <footer id="onboarding-nav-bar" className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 shadow-lg z-20">
             <nav className="flex justify-around items-center h-16 max-w-md mx-auto">
                 {navItems.map(({ view, label, icon }) => (
                     <button

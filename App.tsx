@@ -1,21 +1,20 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Entry, View } from './types';
 import BottomNav from './components/BottomNav';
-import HomeView from './views/HomeView';
-import TimelineView from './views/TimelineView';
+import ChatView from './views/ChatView';
 import CalendarView from './views/CalendarView';
 import OnboardingGuide from './components/OnboardingGuide';
+import InputBar from './components/InputBar';
 import { RefreshIcon } from './components/icons';
 import { supabase } from './src/integrations/supabase/client';
 import { getEntriesFromDatabase, saveEntryToDatabase, updateEntryInDatabase, deleteEntryFromDatabase } from './services/supabaseService';
 
 const App: React.FC = () => {
-    const [view, setView] = useState<View>('home');
+    const [view, setView] = useState<View>('chat');
     const [entries, setEntries] = useState<Entry[]>([]);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [user, setUser] = useState<any>(null);
 
-    // Efeito para verificar autenticação e carregar dados
     useEffect(() => {
         const checkAuth = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -24,10 +23,7 @@ const App: React.FC = () => {
                 await loadEntries(user.id);
             }
         };
-
         checkAuth();
-
-        // Configurar listener de autenticação
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session?.user) {
                 setUser(session.user);
@@ -37,7 +33,6 @@ const App: React.FC = () => {
                 setEntries([]);
             }
         });
-
         return () => subscription.unsubscribe();
     }, []);
 
@@ -50,29 +45,10 @@ const App: React.FC = () => {
         }
     };
 
-    // Efeito para salvar entradas no banco de dados quando mudam
-    useEffect(() => {
-        if (user && entries.length > 0) {
-            // Salvar todas as entradas no banco de dados
-            entries.forEach(async (entry) => {
-                try {
-                    await saveEntryToDatabase({
-                        ...entry,
-                        user_id: user.id,
-                    });
-                } catch (error) {
-                    console.error("Failed to save entry to database", error);
-                }
-            });
-        }
-    }, [entries, user]);
-
-    // Efeito para verificar lembretes
     useEffect(() => {
         if ('Notification' in window && Notification.permission !== 'granted') {
             Notification.requestPermission();
         }
-
         const intervalId = setInterval(() => {
             if (Notification.permission === 'granted') {
                 const now = new Date();
@@ -82,45 +58,35 @@ const App: React.FC = () => {
                             body: entry.description,
                             icon: '/vite.svg',
                         });
-                        // Limpar o lembrete após notificar
                         updateEntry({ ...entry, reminder: undefined });
                     }
                 });
             }
         }, 60 * 1000);
-
         return () => clearInterval(intervalId);
     }, [entries]);
 
     const addEntry = useCallback(async (newEntryData: Omit<Entry, 'id' | 'date'> & { date: string }) => {
         if (!user) return;
-
         const newEntry: Entry = {
             ...newEntryData,
             id: new Date().toISOString() + Math.random(),
             date: newEntryData.date ? new Date(newEntryData.date) : new Date(),
         };
+        
+        const savedEntry = await saveEntryToDatabase({ ...newEntry, user_id: user.id });
 
         setEntries(prevEntries => {
-            const updatedEntries = [...prevEntries, newEntry].sort((a, b) => b.date.getTime() - a.date.getTime());
+            const updatedEntries = [...prevEntries, savedEntry].sort((a, b) => b.date.getTime() - a.date.getTime());
             return updatedEntries;
         });
-
-        setView('timeline');
     }, [user]);
 
     const updateEntry = useCallback(async (updatedEntry: Entry) => {
         if (!user) return;
-
         try {
-            await updateEntryInDatabase({
-                ...updatedEntry,
-                user_id: user.id,
-            });
-
-            setEntries(prevEntries => 
-                prevEntries.map(entry => entry.id === updatedEntry.id ? updatedEntry : entry)
-            );
+            await updateEntryInDatabase({ ...updatedEntry, user_id: user.id });
+            setEntries(prevEntries => prevEntries.map(entry => entry.id === updatedEntry.id ? updatedEntry : entry));
         } catch (error) {
             console.error("Failed to update entry", error);
         }
@@ -128,7 +94,6 @@ const App: React.FC = () => {
 
     const deleteEntry = useCallback(async (entryId: string) => {
         if (!user) return;
-
         try {
             await deleteEntryFromDatabase(entryId, user.id);
             setEntries(prevEntries => prevEntries.filter(entry => entry.id !== entryId));
@@ -144,20 +109,19 @@ const App: React.FC = () => {
 
     const renderView = () => {
         switch (view) {
-            case 'home':
-                return <HomeView addEntry={addEntry} />;
-            case 'timeline':
-                return <TimelineView entries={entries} updateEntry={updateEntry} deleteEntry={deleteEntry} />;
+            case 'chat':
+                return <ChatView entries={entries} updateEntry={updateEntry} deleteEntry={deleteEntry} />;
             case 'calendar':
                 return <CalendarView entries={entries} updateEntry={updateEntry} deleteEntry={deleteEntry} />;
             default:
-                return <HomeView addEntry={addEntry} />;
+                return <ChatView entries={entries} updateEntry={updateEntry} deleteEntry={deleteEntry} />;
         }
     };
 
     return (
         <div className="h-screen w-screen flex flex-col font-sans bg-gray-900 text-gray-100">
-             <header className="fixed top-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm h-14 flex items-center justify-end px-4 z-10 border-b border-gray-800">
+             <header className="fixed top-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm h-14 flex items-center justify-between px-4 z-10 border-b border-gray-800">
+                <h1 className="text-lg font-bold text-blue-300">Diário IA</h1>
                 <button
                     onClick={() => window.location.reload()}
                     className="p-2 text-gray-400 hover:text-blue-300 transition-colors rounded-full hover:bg-gray-700"
@@ -168,9 +132,12 @@ const App: React.FC = () => {
             </header>
 
             {showOnboarding && <OnboardingGuide onComplete={handleOnboardingComplete} />}
-            <main className="flex-grow overflow-y-auto pt-14 pb-20">
+            
+            <main className={`flex-grow overflow-y-auto pt-14 ${view === 'chat' ? 'pb-32' : 'pb-20'}`}>
                 {renderView()}
             </main>
+            
+            {view === 'chat' && <InputBar addEntry={addEntry} />}
             <BottomNav currentView={view} setView={setView} />
         </div>
     );

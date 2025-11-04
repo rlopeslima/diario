@@ -5,7 +5,9 @@ import ChatView from './views/ChatView';
 import CalendarView from './views/CalendarView';
 import OnboardingGuide from './components/OnboardingGuide';
 import InputBar from './components/InputBar';
-import { RefreshIcon } from './components/icons';
+import Login from './views/Login';
+import LoadingSpinner from './components/LoadingSpinner';
+import { RefreshIcon, SignOutIcon } from './components/icons';
 import { supabase } from './src/integrations/supabase/client';
 import { getEntriesFromDatabase, saveEntryToDatabase, updateEntryInDatabase, deleteEntryFromDatabase } from './services/supabaseService';
 
@@ -14,25 +16,29 @@ const App: React.FC = () => {
     const [entries, setEntries] = useState<Entry[]>([]);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setUser(user);
-                await loadEntries(user.id);
-            }
-        };
-        checkAuth();
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session?.user) {
-                setUser(session.user);
+            const { data: { session } } = await supabase.auth.getSession();
+            setUser(session?.user ?? null);
+            if (session?.user) {
                 await loadEntries(session.user.id);
-            } else if (event === 'SIGNED_OUT') {
-                setUser(null);
+            }
+            setLoading(false);
+        };
+
+        checkAuth();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            setUser(session?.user ?? null);
+            if (session?.user) {
+                await loadEntries(session.user.id);
+            } else {
                 setEntries([]);
             }
         });
+
         return () => subscription.unsubscribe();
     }, []);
 
@@ -67,19 +73,27 @@ const App: React.FC = () => {
     }, [entries]);
 
     const addEntry = useCallback(async (newEntryData: Omit<Entry, 'id' | 'date'> & { date: string }) => {
-        if (!user) return;
-        const newEntry: Entry = {
-            ...newEntryData,
-            id: new Date().toISOString() + Math.random(),
-            date: newEntryData.date ? new Date(newEntryData.date) : new Date(),
-        };
-        
-        const savedEntry = await saveEntryToDatabase({ ...newEntry, user_id: user.id });
+        if (!user) {
+            alert("Você precisa estar logado para adicionar uma entrada.");
+            return;
+        }
+        try {
+            const newEntry: Entry = {
+                ...newEntryData,
+                id: new Date().toISOString() + Math.random(),
+                date: newEntryData.date ? new Date(newEntryData.date) : new Date(),
+            };
+            
+            const savedEntry = await saveEntryToDatabase({ ...newEntry, user_id: user.id });
 
-        setEntries(prevEntries => {
-            const updatedEntries = [...prevEntries, savedEntry].sort((a, b) => b.date.getTime() - a.date.getTime());
-            return updatedEntries;
-        });
+            setEntries(prevEntries => {
+                const updatedEntries = [...prevEntries, savedEntry].sort((a, b) => b.date.getTime() - a.date.getTime());
+                return updatedEntries;
+            });
+        } catch (error) {
+            console.error("Failed to add entry:", error);
+            alert(`Erro ao adicionar entrada: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        }
     }, [user]);
 
     const updateEntry = useCallback(async (updatedEntry: Entry) => {
@@ -107,6 +121,10 @@ const App: React.FC = () => {
         setShowOnboarding(false);
     };
 
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+    };
+
     const renderView = () => {
         switch (view) {
             case 'chat':
@@ -118,17 +136,34 @@ const App: React.FC = () => {
         }
     };
 
+    if (loading) {
+        return <div className="flex justify-center items-center h-screen bg-gray-900"><LoadingSpinner size={12} /></div>;
+    }
+
+    if (!user) {
+        return <Login />;
+    }
+
     return (
         <div className="h-screen w-screen flex flex-col font-sans bg-gray-900 text-gray-100">
              <header className="fixed top-0 left-0 right-0 bg-gray-900/80 backdrop-blur-sm h-14 flex items-center justify-between px-4 z-10 border-b border-gray-800">
                 <h1 className="text-lg font-bold text-blue-300">Diário IA</h1>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="p-2 text-gray-400 hover:text-blue-300 transition-colors rounded-full hover:bg-gray-700"
-                    aria-label="Atualizar página"
-                >
-                    <RefreshIcon />
-                </button>
+                <div className="flex items-center space-x-2">
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="p-2 text-gray-400 hover:text-blue-300 transition-colors rounded-full hover:bg-gray-700"
+                        aria-label="Atualizar página"
+                    >
+                        <RefreshIcon />
+                    </button>
+                    <button
+                        onClick={handleSignOut}
+                        className="p-2 text-gray-400 hover:text-red-400 transition-colors rounded-full hover:bg-gray-700"
+                        aria-label="Sair"
+                    >
+                        <SignOutIcon />
+                    </button>
+                </div>
             </header>
 
             {showOnboarding && <OnboardingGuide onComplete={handleOnboardingComplete} />}

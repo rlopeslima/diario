@@ -21,17 +21,7 @@ const App: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setUser(session?.user ?? null);
-            if (session?.user) {
-                await loadEntries(session.user.id);
-            }
-            setLoading(false);
-        };
-
-        checkAuth();
-
+        setLoading(true);
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             setUser(session?.user ?? null);
             if (session?.user) {
@@ -39,6 +29,7 @@ const App: React.FC = () => {
             } else {
                 setEntries([]);
             }
+            setLoading(false);
         });
 
         return () => subscription.unsubscribe();

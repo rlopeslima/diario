@@ -10,6 +10,8 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { RefreshIcon, SignOutIcon } from './components/icons';
 import { supabase } from './src/integrations/supabase/client';
 import { getEntriesFromDatabase, saveEntryToDatabase, updateEntryInDatabase, deleteEntryFromDatabase } from './services/supabaseService';
+import ReloadPrompt from './components/ReloadPrompt';
+import InstallPrompt from './components/InstallPrompt';
 
 const App: React.FC = () => {
     const [view, setView] = useState<View>('chat');
@@ -174,6 +176,8 @@ const App: React.FC = () => {
             
             {view === 'chat' && <InputBar addEntry={addEntry} />}
             <BottomNav currentView={view} setView={setView} />
+            <InstallPrompt />
+            <ReloadPrompt />
         </div>
     );
 };

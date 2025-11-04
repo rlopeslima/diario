@@ -181,8 +181,8 @@ const HomeView: React.FC<HomeViewProps> = ({ addEntry }) => {
 
             {error && <p className="text-red-400 mt-4">{error}</p>}
             
-            <div className="flex items-center space-x-4 mt-8">
-                 <input
+            <div className="flex items-start justify-center space-x-8 mt-8 w-full max-w-md">
+                <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
@@ -190,32 +190,43 @@ const HomeView: React.FC<HomeViewProps> = ({ addEntry }) => {
                     className="hidden"
                     disabled={isProcessing || isRecording}
                 />
-                <button
-                    id="onboarding-receipt-button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessing || isRecording}
-                    className="p-4 rounded-full bg-gray-600 hover:bg-gray-500 transition-colors disabled:opacity-50"
-                    aria-label="Anexar recibo"
-                >
-                    <PaperclipIcon />
-                </button>
-                <button
-                    id="onboarding-mic-button"
-                    onClick={startRecording}
-                    disabled={isProcessing}
-                    className={`p-8 rounded-full transition-all duration-300 ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500 hover:bg-blue-400'}`}
-                    aria-label={isRecording ? 'Parar gravação' : 'Iniciar gravação'}
-                >
-                    <MicIcon />
-                </button>
-                <button
-                    onClick={() => handleProcessText(transcript)}
-                    disabled={isProcessing || isRecording || !transcript.trim()}
-                    className="p-4 rounded-full bg-gray-600 hover:bg-gray-500 transition-colors disabled:opacity-50"
-                    aria-label="Enviar texto"
-                >
-                    <SendIcon />
-                </button>
+                <div className="flex flex-col items-center w-20">
+                    <button
+                        id="onboarding-receipt-button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isProcessing || isRecording}
+                        className="p-4 rounded-full bg-gray-600 hover:bg-gray-500 transition-colors disabled:opacity-50"
+                        aria-label="Anexar recibo"
+                    >
+                        <PaperclipIcon />
+                    </button>
+                    <span className="text-xs text-gray-400 mt-2">Recibo</span>
+                </div>
+
+                <div className="flex flex-col items-center w-20">
+                    <button
+                        id="onboarding-mic-button"
+                        onClick={startRecording}
+                        disabled={isProcessing}
+                        className={`p-8 rounded-full transition-all duration-300 ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500 hover:bg-blue-400'}`}
+                        aria-label={isRecording ? 'Parar gravação' : 'Iniciar gravação'}
+                    >
+                        <MicIcon />
+                    </button>
+                    <span className="text-xs text-gray-400 mt-2">{isRecording ? 'Gravando...' : 'Voz'}</span>
+                </div>
+
+                <div className="flex flex-col items-center w-20">
+                    <button
+                        onClick={() => handleProcessText(transcript)}
+                        disabled={isProcessing || isRecording || !transcript.trim()}
+                        className="p-4 rounded-full bg-gray-600 hover:bg-gray-500 transition-colors disabled:opacity-50"
+                        aria-label="Enviar texto"
+                    >
+                        <SendIcon />
+                    </button>
+                    <span className="text-xs text-gray-400 mt-2">Texto</span>
+                </div>
             </div>
 
         </div>

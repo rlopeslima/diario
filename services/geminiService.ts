@@ -10,6 +10,15 @@ if (!API_KEY) {
 }
 const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
+const itemSchema = {
+    type: Type.OBJECT,
+    properties: {
+        name: { type: Type.STRING, description: "Nome do item comprado." },
+        price: { type: Type.NUMBER, description: "Preço do item." }
+    },
+    required: ["name", "price"]
+};
+
 const entrySchema = {
     type: Type.OBJECT,
     properties: {
@@ -20,7 +29,7 @@ const entrySchema = {
         },
         description: {
             type: Type.STRING,
-            description: "Um resumo conciso da entrada."
+            description: "Um resumo conciso da entrada. Para despesas, pode ser uma descrição geral da compra."
         },
         date: {
             type: Type.STRING,
@@ -37,6 +46,11 @@ const entrySchema = {
         category: {
             type: Type.STRING,
             description: "Uma categoria sugerida para a entrada (por exemplo, 'Supermercado', 'Trabalho', 'Pessoal'). Caso contrário, nulo."
+        },
+        items: {
+            type: Type.ARRAY,
+            description: "Para despesas, uma lista de cada item individual do recibo.",
+            items: itemSchema
         }
     },
     required: ["type", "description", "date"]
@@ -79,7 +93,7 @@ export const processTextEntry = async (text: string) => {
 
 export const processReceipt = async (imageFile: File, userNote: string) => {
     const base64Image = await fileToBase64(imageFile);
-    const prompt = `Analise esta imagem de recibo e converta-a em uma entrada de despesa estruturada. Considere também a nota do usuário: "${userNote}". A data de hoje é ${new Date().toLocaleDateString('pt-BR')}.`;
+    const prompt = `Analise esta imagem de recibo e converta-a em uma entrada de despesa estruturada. Extraia todos os itens individuais com seus nomes e preços, bem como o valor total, o fornecedor e a data. Considere também a nota do usuário: "${userNote}". A data de hoje é ${new Date().toLocaleDateString('pt-BR')}.`;
     
     const imagePart = {
         inlineData: {

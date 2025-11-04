@@ -6,6 +6,11 @@ export enum EntryType {
     EVENT = 'event',
 }
 
+export interface EntryItem {
+    name: string;
+    price: number;
+}
+
 export interface Entry {
     id: string;
     date: Date;
@@ -15,4 +20,5 @@ export interface Entry {
     category?: string;
     vendor?: string;
     reminder?: string; // ISO date string
+    items?: EntryItem[];
 }

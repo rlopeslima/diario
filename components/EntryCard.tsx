@@ -9,7 +9,7 @@ interface EntryCardProps {
 }
 
 const EntryCard: React.FC<EntryCardProps> = ({ entry, onUpdate, onDelete }) => {
-    const { type, description, date, amount, vendor, category, reminder } = entry;
+    const { type, description, date, amount, vendor, category, reminder, items } = entry;
     const [isEditingReminder, setIsEditingReminder] = useState(false);
     const [reminderDate, setReminderDate] = useState(reminder || '');
 
@@ -107,6 +107,19 @@ const EntryCard: React.FC<EntryCardProps> = ({ entry, onUpdate, onDelete }) => {
                                 {vendor && <span className="font-medium">{vendor}</span>}
                             </div>
                             {category && <span className="text-xs text-gray-400 bg-gray-600 px-2 py-1 rounded-full mt-2 inline-block">{category}</span>}
+                            {items && items.length > 0 && (
+                                <div className="mt-3 pt-3 border-t border-gray-600">
+                                    <h4 className="text-xs font-semibold text-gray-400 mb-2">Itens do Recibo:</h4>
+                                    <ul className="space-y-1 text-xs">
+                                        {items.map((item, index) => (
+                                            <li key={index} className="flex justify-between">
+                                                <span>{item.name}</span>
+                                                <span>R$ {item.price.toFixed(2).replace('.', ',')}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

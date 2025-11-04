@@ -31,8 +31,10 @@ const ChatView: React.FC<ChatViewProps> = ({ entries, updateEntry, deleteEntry }
             alert("Nenhuma entrada para exportar.");
             return;
         }
-        const headers = ['ID', 'Data', 'Tipo', 'Descrição', 'Valor', 'Fornecedor', 'Categoria', 'Lembrete'];
-        const rows = filteredEntries.map(entry => `
+        const headers = ['ID', 'Data', 'Tipo', 'Descrição', 'Valor', 'Fornecedor', 'Categoria', 'Lembrete', 'Itens'];
+        const rows = filteredEntries.map(entry => {
+            const itemsString = entry.items ? entry.items.map(item => `${item.name} (R$ ${item.price.toFixed(2).replace('.',',')})`).join('; ') : '';
+            return `
             <tr>
                 <td contenteditable="false" style="color: #9ca3af;">${entry.id}</td>
                 <td contenteditable="true">${entry.date.toISOString().split('T')[0]}</td>
@@ -42,9 +44,40 @@ const ChatView: React.FC<ChatViewProps> = ({ entries, updateEntry, deleteEntry }
                 <td contenteditable="true">${entry.vendor ?? ''}</td>
                 <td contenteditable="true">${entry.category ?? ''}</td>
                 <td contenteditable="true">${entry.reminder ? new Date(entry.reminder).toISOString().substring(0, 16).replace('T', ' ') : ''}</td>
+                <td contenteditable="true">${itemsString}</td>
             </tr>
-        `).join('');
-        const htmlString = `...`; // Conteúdo do HTML de exportação omitido para brevidade
+        `}).join('');
+        const htmlString = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Exportação Diário IA</title>
+            <style>
+                body { font-family: sans-serif; background-color: #111827; color: #d1d5db; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid #374151; padding: 8px; text-align: left; }
+                th { background-color: #1f2937; }
+                tr:nth-child(even) { background-color: #1f2937; }
+                td[contenteditable="true"]:focus { background-color: #4b5563; outline: 2px solid #3b82f6; }
+            </style>
+        </head>
+        <body>
+            <h1>Exportação de Entradas - Diário IA</h1>
+            <p>Dados exportados em: ${new Date().toLocaleString('pt-BR')}</p>
+            <p>Você pode editar os campos clicando neles.</p>
+            <table>
+                <thead>
+                    <tr>
+                        ${headers.map(h => `<th>${h}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </body>
+        </html>`;
         const blob = new Blob([htmlString], { type: 'text/html;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

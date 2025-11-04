@@ -13,6 +13,7 @@ export const saveEntryToDatabase = async (entry: Omit<Entry, 'id'> & { user_id: 
       vendor: entry.vendor,
       category: entry.category,
       reminder: entry.reminder,
+      items: entry.items,
     })
     .select()
     .single();
@@ -59,6 +60,7 @@ export const updateEntryInDatabase = async (entry: Entry & { user_id: string }):
       vendor: entry.vendor,
       category: entry.category,
       reminder: entry.reminder,
+      items: entry.items,
     })
     .eq('id', entry.id)
     .eq('user_id', entry.user_id)

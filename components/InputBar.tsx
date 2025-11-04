@@ -28,7 +28,9 @@ const InputBar: React.FC<InputBarProps> = ({ addEntry }) => {
         processorRef.current?.disconnect();
         sourceRef.current?.disconnect();
         streamRef.current?.getTracks().forEach(track => track.stop());
-        audioContextRef.current?.close();
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+            audioContextRef.current.close();
+        }
         processorRef.current = null;
         sourceRef.current = null;
         streamRef.current = null;
@@ -72,7 +74,12 @@ const InputBar: React.FC<InputBarProps> = ({ addEntry }) => {
         setStatus('Ouvindo...');
         try {
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+            if (audioContextRef.current.state === 'suspended') {
+                await audioContextRef.current.resume();
+            }
+            
             streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
             sessionPromiseRef.current = startLiveSession({
                 onMessage: (message: LiveServerMessage) => {
                     if (message.serverContent?.inputTranscription) {
@@ -81,13 +88,15 @@ const InputBar: React.FC<InputBarProps> = ({ addEntry }) => {
                 },
                 onError: (e) => {
                     console.error("Live session error:", e);
-                    setError("Ocorreu um erro de conexão.");
+                    setError("Ocorreu um erro de conexão durante a gravação.");
                     setIsRecording(false);
                 },
                 onClose: () => console.log('Sessão ao vivo fechada.'),
             });
+            
             sourceRef.current = audioContextRef.current.createMediaStreamSource(streamRef.current);
             processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+            
             processorRef.current.onaudioprocess = (audioProcessingEvent) => {
                 const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
                 const int16 = new Int16Array(inputData.length);
@@ -97,11 +106,22 @@ const InputBar: React.FC<InputBarProps> = ({ addEntry }) => {
                 const pcmBlob: Blob = { data: encode(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' };
                 sessionPromiseRef.current?.then((session) => session.sendRealtimeInput({ media: pcmBlob }));
             };
+            
             sourceRef.current.connect(processorRef.current);
             processorRef.current.connect(audioContextRef.current.destination);
         } catch (err) {
             console.error("Error starting recording:", err);
-            setError("Não foi possível acessar o microfone. Por favor, verifique as permissões.");
+            let errorMessage = "Não foi possível acessar o microfone. Por favor, verifique as permissões do seu navegador.";
+            if (err instanceof Error) {
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    errorMessage = "Permissão para o microfone negada. Por favor, habilite o acesso nas configurações do seu navegador.";
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                    errorMessage = "Nenhum microfone encontrado. Por favor, conecte um dispositivo de áudio.";
+                } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+                    errorMessage = "Ocorreu um erro com o hardware do microfone. Tente reiniciar o navegador.";
+                }
+            }
+            setError(errorMessage);
             setIsRecording(false);
             cleanupAudio();
         }

@@ -49,7 +49,8 @@ const HomeView: React.FC<HomeViewProps> = ({ addEntry }) => {
         try {
             const newEntry = await processTextEntry(text);
             addEntry(newEntry);
-        } catch (err) {
+        } catch (err)
+ {
             setError(err instanceof Error ? err.message : 'Ocorreu um erro desconhecido.');
         } finally {
             setIsProcessing(false);
@@ -181,46 +182,48 @@ const HomeView: React.FC<HomeViewProps> = ({ addEntry }) => {
 
             {error && <p className="text-red-400 mt-4">{error}</p>}
             
-            <div className="flex items-center justify-center space-x-4 mt-8 w-full max-w-md">
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                    disabled={isProcessing || isRecording}
-                />
-                <button
-                    id="onboarding-receipt-button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessing || isRecording}
-                    className="p-4 rounded-full bg-gray-700 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500"
-                    aria-label="Anexar recibo"
-                    title="Anexar Recibo"
-                >
-                    <PaperclipIcon />
-                </button>
+            <div className={`relative mt-8 w-full max-w-xs mx-auto bg-gray-800/50 rounded-full p-2 shadow-lg border border-gray-700 transition-all duration-300 ${isRecording ? 'bg-gray-900' : ''}`}>
+                <div className="flex items-center justify-around">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isProcessing || isRecording}
+                    />
+                    <button
+                        id="onboarding-receipt-button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isProcessing || isRecording}
+                        className={`p-3 rounded-full bg-gray-700 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 ${isRecording ? 'opacity-30' : ''}`}
+                        aria-label="Anexar recibo"
+                        title="Anexar Recibo"
+                    >
+                        <PaperclipIcon />
+                    </button>
 
-                <button
-                    id="onboarding-mic-button"
-                    onClick={startRecording}
-                    disabled={isProcessing}
-                    className={`p-8 rounded-full transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500 hover:bg-blue-400'}`}
-                    aria-label={isRecording ? 'Parar gravação' : 'Iniciar gravação de voz'}
-                    title={isRecording ? 'Parar Gravação' : 'Gravar Voz'}
-                >
-                    <MicIcon />
-                </button>
+                    <button
+                        id="onboarding-mic-button"
+                        onClick={startRecording}
+                        disabled={isProcessing}
+                        className={`p-6 rounded-full transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-blue-500 hover:bg-blue-400'}`}
+                        aria-label={isRecording ? 'Parar gravação' : 'Iniciar gravação de voz'}
+                        title={isRecording ? 'Parar Gravação' : 'Gravar Voz'}
+                    >
+                        <MicIcon />
+                    </button>
 
-                <button
-                    onClick={() => handleProcessText(transcript)}
-                    disabled={isProcessing || isRecording || !transcript.trim()}
-                    className="p-4 rounded-full bg-gray-700 hover:bg-gray-600 transition-all duration-200 disabled:opacity-50 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500"
-                    aria-label="Enviar texto"
-                    title="Enviar Texto"
-                >
-                    <SendIcon />
-                </button>
+                    <button
+                        onClick={() => handleProcessText(transcript)}
+                        disabled={isProcessing || isRecording || !transcript.trim()}
+                        className={`p-3 rounded-full transition-all duration-200 disabled:opacity-50 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-blue-500 ${isRecording ? 'opacity-30' : ''} ${transcript.trim() && !isRecording ? 'bg-blue-500 hover:bg-blue-400' : 'bg-gray-700 hover:bg-gray-600'}`}
+                        aria-label="Enviar texto"
+                        title="Enviar Texto"
+                    >
+                        <SendIcon />
+                    </button>
+                </div>
             </div>
 
         </div>

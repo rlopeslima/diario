@@ -117,8 +117,8 @@ export const startLiveSession = (callbacks: {
             onclose: callbacks.onClose,
         },
         config: {
-            // Fix: Add responseModalities as required by the Live API guidelines.
-            responseModalities: [Modality.AUDIO],
+            // A modalidade de resposta não é necessária quando usamos apenas a transcrição.
+            // responseModalities: [Modality.AUDIO],
             inputAudioTranscription: {},
         }
     });
